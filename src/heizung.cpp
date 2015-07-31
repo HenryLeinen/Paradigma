@@ -216,8 +216,8 @@ void daemon_process()
 int main(void)
 {
 	/* Initialize the log file recording */
-	setlogmask(LOG_UPTO(LOG_NOTICE));
-	openlog(DAEMON_NAME, LOG_CONS | LOG_NDELAY | LOG_PERROR | LOG_PID, LOG_USER);
+	setlogmask(LOG_UPTO(LOG_INFO));
+	openlog(DAEMON_NAME, LOG_CONS | LOG_NDELAY | LOG_PERROR | LOG_PID, LOG_DAEMON);
 
 	printf("Entering daemon...\n");
 	syslog(LOG_INFO, "Entering daemon...");
