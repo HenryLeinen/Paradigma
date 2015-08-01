@@ -18,9 +18,6 @@ DAEMON=$DIR/heizungd
 # The name of the daemon
 DAEMON_NAME=heizungd
 
-# Any options we want to pass to the daemon
-DAEMON_OPTS=""
-
 # The next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO.
 DAEMON_USER=root
@@ -28,11 +25,13 @@ DAEMON_USER=root
 # The process ID of the script when it runs is stored here
 PIDFILE=/var/run/$DAEMON_NAME.pid
 
+# Any options we want to pass to the daemon
+DAEMON_OPTS=$PIDFILE
 
 do_start() {
 	# Start our daemon daemon
 	echo -n $"Starting system daemon $prog."
-	start-stop-daemon --start --pidfile "$PIDFILE" --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --pidfile "$PIDFILE" --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON --exec $DAEMON -- $DAEMON_OPTS
 	log_end_msg $?
 	RETVAL=$?
 }

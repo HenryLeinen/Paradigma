@@ -213,7 +213,7 @@ void daemon_process()
 }
 
 
-int main(void)
+int main(int argc, char *argl[])
 {
 	/* Initialize the log file recording */
 	setlogmask(LOG_UPTO(LOG_INFO));
@@ -239,6 +239,21 @@ int main(void)
 	if (pid > 0)
 	{
 		printf("Daemon is running !\n");
+
+		/* Write our pidfile */
+		if (argc > 1)
+		{
+			FILE *pidFile = fopen(argl[1], "w");
+			if (pidFile != NULL)
+			{
+				fprintf(pidFile, "%d", pid);
+				fclose(pidFile);
+			} 
+			else
+			{
+				syslog(LOG_WARNING, "Unable to write  PIDFILE !");
+			}
+		}
 		exit (EXIT_SUCCESS);
 	}
 
