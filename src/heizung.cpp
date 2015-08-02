@@ -69,7 +69,9 @@ void OnDataChanged1(void)
 	char postField[512];
 	CURL *curl;
 	CURLcode res;
-
+#ifdef DEBUG
+	syslog(LOG_INFO, "Received message from paradigma !"),
+#endif
 	/* initialize the curl library */
 	curl_global_init(CURL_GLOBAL_ALL);
 
@@ -96,15 +98,18 @@ void OnDataChanged1(void)
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK)
 		{
-			syslog(LOG_INFO, "curl_easy_perform() failed: %s", curl_easy_strerror(res));
+			syslog(LOG_ERR, "curl_easy_perform() failed: %s", curl_easy_strerror(res));
 		}
 		else
 		{
+#ifdef DEBUG
+			syslog(LOG_INFO, "Successfully sent data to the cloud !");
+#endif
 		}
 		curl_easy_cleanup(curl);
 	} else
 	{
-		syslog(LOG_INFO, "Failed to post request to cloud.");
+		syslog(LOG_ERR, "Failed to post request to cloud.");
 	}
 	curl_global_cleanup();
 }
@@ -188,22 +193,27 @@ bool daemon_init()
 void daemon_process()
 {
 	static int cnt = 0;
+	static int cnt_total = 0;
+
 	int nAvail = serialDataAvail(usb);
 
 	if (nAvail == 0)
 	{
 		/* no data received this time */
 		cnt++;
+		cnt_total++;
 		if (cnt > MAX_TIMEOUT)
 		{
 			/* too often no response, so request data again */
-			syslog(LOG_INFO, "Paradigma data timeout. Requesting again .");
+			syslog(LOG_INFO, "Paradigma data timeout. No response received since %ld slices. Requesting again.", cnt_total);
 			requestData();
 			cnt = 0;
 		}
 	}
 	else
 	{
+		cnt = 0;
+		cnt_total = 0;
 		while(nAvail--)
 		{
 			int s = serialGetchar(usb);
