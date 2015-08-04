@@ -6,13 +6,20 @@ CPP = g++
 # -Wall	turns on most, but not all, compiler warnings
 # -g 	adds debuging information to the executable file
 CFLAGS += -O2
+CFLAGS += -DBIG_JOINS=1
+#CFLAGS += -fno_strict_aliasing
+CFLAGS += -g -DDEBUG
 
 # define the include directories
 INC += -I./inc/
+INC += -I/usr/include/mysql
 
 # define any libraries which are reguired
 LIBS = -lstdc++ -lm -lwiringPi -lcurl-gnutls
+LIBS += -lmysqlclient
+LIBS += -lpthread -lm -lz -lrt -ldl
 LDIR = ./obj
+LIBDIR = -L/usr/lib/arm-linux-gnueabihf
 
 # define the sources
 CSRCS =
@@ -34,7 +41,7 @@ all:	clean $(MAIN)
 
 $(MAIN): $(_XOBJS) $(_COBJS)
 	@echo Linking;
-	$(CC) -o $(MAIN) $(COBJS) $(XOBJS) $(LIBS)
+	$(CC) -o $(MAIN) $(COBJS) $(XOBJS) $(LIBDIR) $(LIBS)
 
 %.o: ./src/%.c
 	$(CC) $(CFLAGS) $(INC) -c $< -o $(LDIR)/$@

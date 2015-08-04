@@ -6,5 +6,6 @@ This requires of course a service interfaces which can translate the paradigma b
 I use a paradigma pelleti mini.
 
 Required libraries:
-	CURL4 - required to communicate HTTP-POSTs with cloud
-	sysklogd - required to use syslog service
+	CURL4 			- required to communicate HTTP-POSTs with cloud
+	sysklogd 		- required to use syslog service
+	libmysqlclient-dev	- for writing into the mysql database
