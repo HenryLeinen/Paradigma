@@ -8,7 +8,8 @@ CPP = g++
 CFLAGS += -O2
 CFLAGS += -DBIG_JOINS=1
 #CFLAGS += -fno_strict_aliasing
-CFLAGS += -g -DDEBUG
+CFLAGS += -g
+#CFLAGS += -DDEBUG
 
 # define the include directories
 INC += -I./inc/
@@ -16,10 +17,9 @@ INC += -I/usr/include/mysql
 
 # define any libraries which are reguired
 LIBS = -lstdc++ -lm -lwiringPi -lcurl-gnutls
-LIBS += -lmysqlclient
 LIBS += -lpthread -lm -lz -lrt -ldl
 LDIR = ./obj
-LIBDIR = -L/usr/lib/arm-linux-gnueabihf
+LIBDIR = $(shell mysql_config --libs)
 
 # define the sources
 CSRCS =
@@ -39,15 +39,16 @@ MAIN = heizungd
 all:	clean $(MAIN)
 	@echo Simple compiler named mycc has been compiled
 
+.PHONY: heizungd
 $(MAIN): $(_XOBJS) $(_COBJS)
 	@echo Linking;
 	$(CC) -o $(MAIN) $(COBJS) $(XOBJS) $(LIBDIR) $(LIBS)
 
-%.o: ./src/%.c
-	$(CC) $(CFLAGS) $(INC) -c $< -o $(LDIR)/$@
+%.o: ./src/%.c makefile
+	$(CC) $(CFLAGS) $(INC) -MMD -MP -c $< -o $(LDIR)/$@
 
-%.o: ./src/%.cpp
-	$(CPP) $(CFLAGS) $(INC) -c $< -o $(LDIR)/$@
+%.o: ./src/%.cpp makefile
+	$(CPP) $(CFLAGS) $(INC) -MMD -MP -c $< -o $(LDIR)/$@
 
 .PHONY: depend clean
 
