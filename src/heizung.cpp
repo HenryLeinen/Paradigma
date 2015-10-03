@@ -139,6 +139,29 @@ void stopData()
 	serialPutchar(usb, 0xde);
 }
 
+/********************************************************
+ * Function      - updateDeviceData()
+ *
+ * Function writes a new value into a devices output
+ */
+void updateDeviceDataf(const char* devName, float value)
+{
+	FILE *f = fopen(devName, "w+");
+	if (f != NULL) {
+		fprintf(f, "%f", value);
+		fclose(f);
+	}
+}
+
+void updateDeviceDatal(const char* devName, unsigned long value)
+{
+	FILE *f = fopen(devName, "w+");
+	if (f != NULL) {
+		fprintf(f, "%ld", value);
+		fclose(f);
+	}
+} 
+
 
 /********************************************************
  * Callback     - OnDataChanged1()
@@ -173,6 +196,14 @@ void OnDataChanged1(void)
 	betriebsstunden = dta.getBetriebsstundenKessel();
 	fehler_fuehler = dta.getStoercodeFuehler();
 	fehler_kessel = dta.getStoercodeKessel();
+
+	/* Update device values */
+	updateDeviceDataf("/dev/paradigma/AussenTemp", aussen_temp);
+	updateDeviceDataf("/dev/paradigma/WasserTemp", wasser_temp);
+	updateDeviceDatal("/dev/paradigma/KesselStarts", kesselstarts);
+	updateDeviceDatal("/dev/paradigma/Betriebsstunden", betriebsstunden);
+	updateDeviceDatal("/dev/paradigma/FehlerFuehler", fehler_fuehler);
+	updateDeviceDatal("/dev/paradigma/FehlerKessel", fehler_kessel);
 
 	/* initialize the curl library */
 	curl_global_init(CURL_GLOBAL_ALL);
