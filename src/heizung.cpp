@@ -36,6 +36,7 @@ static MYSQL_BIND sql_bind_betr_parameters[5];
 
 const unsigned int ChannelID = 48961;
 const char WriteAPIKey[] = "5BXPOG4JUBN8EOEI";
+#if 0
 const char DB_NAME[] = "heizung";
 const char DB_USER[] = "monitor";
 const char DB_PASS[] = "Suzi2015";
@@ -45,8 +46,9 @@ const char DB_PASS[] = "Suzi2015";
 const char QUERY_TEXT_Betr[] = "INSERT INTO \
 				betriebsdaten(kesselstarts, betriebsstunden, fehler_fuehler, fehler_kessel) \
 				VALUES(?,?,?,?)";
+#endif
 
-
+#if 0
 bool mysqlConnect()
 {
 	/* Initialize mysql */
@@ -111,6 +113,9 @@ bool mysqlDisconnect()
 	syslog(LOG_INFO, "Successfully disconnected from MySQL database.");
 #endif
 }
+
+#endif
+
 
 /******************************************************
  * Function   - requestData()
@@ -181,29 +186,50 @@ void OnDataChanged1(void)
 	float wasser_temp;
 	float kesselvorlauf_temp;
 	float kesselruecklauf_temp;
+	float raumtempHK1_temp, raumtempHK2_temp;
+	float vorlauftempHK1_temp, vorlauftempHK2_temp;
+	float ruecklauftempHK1_temp, ruecklauftempHK2_temp;
+	float pufferoben_temp, pufferunten_temp;
+
 	unsigned long kesselstarts;
 	unsigned long  betriebsstunden;
 	unsigned char fehler_fuehler;
 	unsigned short fehler_kessel;
-	
+
 
 	/* get the new data from parser */
 	aussen_temp = dta.getAussentemp();
 	wasser_temp = dta.getWarmwassertemp();
 	kesselvorlauf_temp = dta.getKesselvorlauf();
 	kesselruecklauf_temp = dta.getKesselruecklauf();
+	raumtempHK1_temp = dta.getRaumtemperaturHK1();
+	raumtempHK2_temp = dta.getRaumtemperaturHK2();
+	vorlauftempHK1_temp = dta.getVorlauftemperaturHK1();
+	vorlauftempHK2_temp = dta.getVorlauftemperaturHK2();
+	ruecklauftempHK1_temp = dta.getRuecklauftemperaturHK1();
+	ruecklauftempHK2_temp = dta.getRuecklauftemperaturHK2();
+	pufferoben_temp = dta.getPuffertemperaturOben();
+	pufferunten_temp = dta.getPuffertemperaturUnten();
+
 	kesselstarts = dta.getAnzahlKesselstarts();
 	betriebsstunden = dta.getBetriebsstundenKessel();
 	fehler_fuehler = dta.getStoercodeFuehler();
 	fehler_kessel = dta.getStoercodeKessel();
 
+
 	/* Update device values */
 	updateDeviceDataf("/dev/paradigma/AussenTemp", aussen_temp);
 	updateDeviceDataf("/dev/paradigma/WasserTemp", wasser_temp);
-	updateDeviceDatal("/dev/paradigma/KesselStarts", kesselstarts);
-	updateDeviceDatal("/dev/paradigma/Betriebsstunden", betriebsstunden);
-	updateDeviceDatal("/dev/paradigma/FehlerFuehler", fehler_fuehler);
-	updateDeviceDatal("/dev/paradigma/FehlerKessel", fehler_kessel);
+	updateDeviceDataf("/dev/paradigma/Kesselvorlauf", kesselvorlauf_temp);
+	updateDeviceDataf("/dev/paradigma/Kesselruecklauf", kesselruecklauf_temp);
+	updateDeviceDataf("/dev/paradigma/RaumTempHK1", raumtempHK1_temp);
+	updateDeviceDataf("/dev/paradigma/RaumTempHK2", raumtempHK2_temp);
+	updateDeviceDataf("/dev/paradigma/VorlaufTempHK1", vorlauftempHK1_temp);
+	updateDeviceDataf("/dev/paradigma/VorlaufTempHK2", vorlauftempHK2_temp);
+	updateDeviceDataf("/dev/paradigma/RuecklaufTempHK1", ruecklauftempHK1_temp);
+	updateDeviceDataf("/dev/paradigma/RuecklaufTempHK2", ruecklauftempHK2_temp);
+	updateDeviceDataf("/dev/paradigma/PufferTemperaturOben", pufferoben_temp);
+	updateDeviceDataf("/dev/paradigma/PufferTemperaturUnten", pufferunten_temp);
 
 	/* initialize the curl library */
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -212,7 +238,6 @@ void OnDataChanged1(void)
 	curl = curl_easy_init();
 	if (curl)
 	{
-		
 		/* First set the url that is about to receive our POST. */
 		curl_easy_setopt(curl, CURLOPT_URL, "https://api.thingspeak.com/update");
 		/* Now specify the POST data */
@@ -245,6 +270,7 @@ void OnDataChanged1(void)
 	}
 	curl_global_cleanup();
 
+#if 0
 	/* just exit here if MySQL was not initialized properly */
 	if (mysql == NULL)
 		return;
@@ -254,17 +280,17 @@ void OnDataChanged1(void)
 	sql_bind_temp_parameters[0].buffer = (char*)&aussen_temp;
 	sql_bind_temp_parameters[0].is_null = 0;
 	sql_bind_temp_parameters[0].length = 0;
-	
+
 	sql_bind_temp_parameters[1].buffer_type = MYSQL_TYPE_FLOAT;
 	sql_bind_temp_parameters[1].buffer = (char*)&wasser_temp;
 	sql_bind_temp_parameters[1].is_null = 0;
 	sql_bind_temp_parameters[1].length = 0;
-	
+
 	sql_bind_temp_parameters[2].buffer_type = MYSQL_TYPE_FLOAT;
 	sql_bind_temp_parameters[2].buffer = (char*)&kesselvorlauf_temp;
 	sql_bind_temp_parameters[2].is_null = 0;
 	sql_bind_temp_parameters[2].length = 0;
-	
+
 	sql_bind_temp_parameters[3].buffer_type = MYSQL_TYPE_FLOAT;
 	sql_bind_temp_parameters[3].buffer = (char*)&kesselruecklauf_temp;
 	sql_bind_temp_parameters[3].is_null = 0;
@@ -284,6 +310,7 @@ void OnDataChanged1(void)
 		return;
 	}
 	syslog(LOG_INFO, "Successfully queried the DB !");
+#endif
 }
 
 /*************************************************************
@@ -305,7 +332,12 @@ void OnDataChanged2(void)
 	fehler_fuehler = dta.getStoercodeFuehler();
 	fehler_kessel = dta.getStoercodeKessel();
 
+	updateDeviceDatal("/dev/paradigma/Betriebsstunden", betriebsstunden);
+	updateDeviceDatal("/dev/paradigma/KesselStarts", kesselstarts);
+	updateDeviceDatal("/dev/paradigma/FehlerKessel", fehler_kessel);
+	updateDeviceDatal("/dev/paradigma/FehlerFuehler", fehler_fuehler);
 
+#if 0
 	sql_bind_betr_parameters[0].buffer_type = MYSQL_TYPE_LONG;
 	sql_bind_betr_parameters[0].buffer = (char*)&kesselstarts;
 	sql_bind_betr_parameters[0].is_null = 0;
@@ -339,6 +371,7 @@ void OnDataChanged2(void)
 		syslog(LOG_ERR, mysql_stmt_error(sql_betr_statement));
 		return;
 	}
+#endif
 	syslog(LOG_INFO, "Successfully queried the DB !");
 
 #if 0
@@ -487,11 +520,13 @@ int main(int argc, char *argl[])
 		exit (EXIT_SUCCESS);
 	}
 
+#if 0
 	/* Attention: according to some sources, the mysql connection shall be made immediately after the forking.
 				  Otherwise the server 'runs away'.
 				  */
 	if (!mysqlConnect())
 		exit(EXIT_FAILURE);
+#endif
 
 	umask(0);
 
