@@ -35,7 +35,7 @@ typedef enum {
 
 class ParadigmaTemperature 
 {
-    unsigned short m_temp;
+    short m_temp;
     
     public:
         ParadigmaTemperature() : m_temp(0) {}

@@ -8,7 +8,6 @@
 #include <wiringSerial.h>
 #include "ParadigmaData.h"
 #include <curl/curl.h>
-#include <mysql.h>
 
 using namespace Paradigma;
 
@@ -28,93 +27,10 @@ using namespace Paradigma;
  */ 
 static int usb;
 static ParadigmaMonitorData	dta;
-static MYSQL *mysql = NULL;
-static MYSQL_STMT *sql_temp_statement;
-static MYSQL_STMT *sql_betr_statement;
-static MYSQL_BIND sql_bind_temp_parameters[5];
-static MYSQL_BIND sql_bind_betr_parameters[5];
 
 const unsigned int ChannelID = 48961;
 const char WriteAPIKey[] = "5BXPOG4JUBN8EOEI";
-#if 0
-const char DB_NAME[] = "heizung";
-const char DB_USER[] = "monitor";
-const char DB_PASS[] = "Suzi2015";
-#define  QUERY_TEXT_Temp  "INSERT INTO \
-				temperaturen(aussen, wasser, kesselvorlauf, kesselruecklauf) \
-				VALUES(?,?,?,?)"
-const char QUERY_TEXT_Betr[] = "INSERT INTO \
-				betriebsdaten(kesselstarts, betriebsstunden, fehler_fuehler, fehler_kessel) \
-				VALUES(?,?,?,?)";
-#endif
 
-#if 0
-bool mysqlConnect()
-{
-	/* Initialize mysql */
-	mysql = mysql_init(NULL);
-	if (mysql == NULL)
-	{
-		syslog(LOG_ERR, "Failed to initialize MySQL!");
-		return false;
-	}
-	syslog(LOG_INFO, "Successfully initialized mysql!");
-
-	/* connect to the database */
-	if (mysql_real_connect(mysql, "127.0.0.1", DB_USER, DB_PASS, DB_NAME, 0, NULL, 0) == NULL)
-	{
-		syslog(LOG_ERR, "Failed to connect to MySQL database  :");
-		syslog(LOG_ERR, mysql_error(mysql));
-		return false;
-	}
-	else
-	{
-		syslog(LOG_INFO, "Successfully connected to MySQL database.");
-	}
-
-	/* prepare everything for the sql database access */
-	sql_temp_statement = mysql_stmt_init(mysql);
-	if (!sql_temp_statement)
-	{
-		syslog(LOG_ERR, "Failed to initialize the 'temperature' sql statement !");
-		syslog(LOG_ERR, mysql_stmt_error(sql_temp_statement));
-		return false;
-	}
-	if (mysql_stmt_prepare(sql_temp_statement, QUERY_TEXT_Temp, strlen(QUERY_TEXT_Temp)))
-	{
-		syslog(LOG_ERR, "Failed to prepare SQL INSERT statement for temperatures !");
-		syslog(LOG_ERR, mysql_stmt_error(sql_temp_statement));
-		return false;
-	}
-	memset (sql_bind_temp_parameters, 0, sizeof(sql_bind_temp_parameters));
-	
-	sql_betr_statement = mysql_stmt_init(mysql);
-	if (!sql_betr_statement)
-	{
-		syslog(LOG_ERR, "Failed to initialize the 'betriebsdaten' sql statement");
-		syslog(LOG_ERR, mysql_stmt_error(sql_betr_statement));
-		return false;
-	}
-	if (mysql_stmt_prepare(sql_betr_statement, QUERY_TEXT_Betr, strlen(QUERY_TEXT_Betr)))
-	{
-		syslog(LOG_ERR, "Failed to prepare SQL INSERT statement for betriebsdaten !");
-		syslog(LOG_ERR, mysql_stmt_error(sql_betr_statement));
-	}
-	memset (sql_bind_betr_parameters, 0, sizeof(sql_bind_betr_parameters));
-	
-	return true;
-}
-
-
-bool mysqlDisconnect()
-{
-	mysql_close(mysql);
-#ifdef DEBUG
-	syslog(LOG_INFO, "Successfully disconnected from MySQL database.");
-#endif
-}
-
-#endif
 
 
 /******************************************************
@@ -269,48 +185,6 @@ void OnDataChanged1(void)
 		syslog(LOG_ERR, "Failed to post request to cloud.");
 	}
 	curl_global_cleanup();
-
-#if 0
-	/* just exit here if MySQL was not initialized properly */
-	if (mysql == NULL)
-		return;
-
-	/* Now write the data into the sql database */
-	sql_bind_temp_parameters[0].buffer_type = MYSQL_TYPE_FLOAT;
-	sql_bind_temp_parameters[0].buffer = (char*)&aussen_temp;
-	sql_bind_temp_parameters[0].is_null = 0;
-	sql_bind_temp_parameters[0].length = 0;
-
-	sql_bind_temp_parameters[1].buffer_type = MYSQL_TYPE_FLOAT;
-	sql_bind_temp_parameters[1].buffer = (char*)&wasser_temp;
-	sql_bind_temp_parameters[1].is_null = 0;
-	sql_bind_temp_parameters[1].length = 0;
-
-	sql_bind_temp_parameters[2].buffer_type = MYSQL_TYPE_FLOAT;
-	sql_bind_temp_parameters[2].buffer = (char*)&kesselvorlauf_temp;
-	sql_bind_temp_parameters[2].is_null = 0;
-	sql_bind_temp_parameters[2].length = 0;
-
-	sql_bind_temp_parameters[3].buffer_type = MYSQL_TYPE_FLOAT;
-	sql_bind_temp_parameters[3].buffer = (char*)&kesselruecklauf_temp;
-	sql_bind_temp_parameters[3].is_null = 0;
-	sql_bind_temp_parameters[3].length = 0;
-
-	if (mysql_stmt_bind_param(sql_temp_statement, sql_bind_temp_parameters))
-	{
-		syslog(LOG_ERR, "Failed to bind temperature query parameters to statement !\n");
-		syslog(LOG_ERR, mysql_stmt_error(sql_temp_statement));
-		return;
-	}
-
-	if (mysql_stmt_execute(sql_temp_statement))
-	{
-		syslog(LOG_ERR, "Failed to execute sql statement !");
-		syslog(LOG_ERR, mysql_stmt_error(sql_temp_statement));
-		return;
-	}
-	syslog(LOG_INFO, "Successfully queried the DB !");
-#endif
 }
 
 /*************************************************************
@@ -336,43 +210,6 @@ void OnDataChanged2(void)
 	updateDeviceDatal("/dev/paradigma/KesselStarts", kesselstarts);
 	updateDeviceDatal("/dev/paradigma/FehlerKessel", fehler_kessel);
 	updateDeviceDatal("/dev/paradigma/FehlerFuehler", fehler_fuehler);
-
-#if 0
-	sql_bind_betr_parameters[0].buffer_type = MYSQL_TYPE_LONG;
-	sql_bind_betr_parameters[0].buffer = (char*)&kesselstarts;
-	sql_bind_betr_parameters[0].is_null = 0;
-	sql_bind_betr_parameters[0].length = 0;
-
-	sql_bind_betr_parameters[1].buffer_type = MYSQL_TYPE_LONG;
-	sql_bind_betr_parameters[1].buffer = (char*)&betriebsstunden;
-	sql_bind_betr_parameters[1].is_null = 0;
-	sql_bind_betr_parameters[1].length = 0;
-
-	sql_bind_betr_parameters[2].buffer_type = MYSQL_TYPE_TINY;
-	sql_bind_betr_parameters[2].buffer = (char*)&fehler_fuehler;
-	sql_bind_betr_parameters[2].is_null = 0;
-	sql_bind_betr_parameters[2].length = 0;
-
-	sql_bind_betr_parameters[3].buffer_type = MYSQL_TYPE_SHORT;
-	sql_bind_betr_parameters[3].buffer = (char*)&fehler_kessel;
-	sql_bind_betr_parameters[3].is_null = 0;
-	sql_bind_betr_parameters[3].length = 0;
-
-	if (mysql_stmt_bind_param(sql_betr_statement, sql_bind_betr_parameters))
-	{
-		syslog(LOG_ERR, "Failed to bind betriebsdaten query parameters to statement !\n");
-		syslog(LOG_ERR, mysql_stmt_error(sql_betr_statement));
-		return;
-	}
-
-	if (mysql_stmt_execute(sql_betr_statement))
-	{
-		syslog(LOG_ERR, "Failed to execute sql statement !");
-		syslog(LOG_ERR, mysql_stmt_error(sql_betr_statement));
-		return;
-	}
-#endif
-	syslog(LOG_INFO, "Successfully queried the DB !");
 
 #if 0
 	char postField[512];
@@ -519,14 +356,6 @@ int main(int argc, char *argl[])
 		}
 		exit (EXIT_SUCCESS);
 	}
-
-#if 0
-	/* Attention: according to some sources, the mysql connection shall be made immediately after the forking.
-				  Otherwise the server 'runs away'.
-				  */
-	if (!mysqlConnect())
-		exit(EXIT_FAILURE);
-#endif
 
 	umask(0);
 
