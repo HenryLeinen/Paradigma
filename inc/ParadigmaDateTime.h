@@ -33,5 +33,31 @@ class ParadigmaDateTime
         unsigned char       getMinute() const   { return bcdToDec(m_Minute); }
         unsigned char       getHour() const     { return bcdToDec(m_Hour); }
 } __attribute__ (( __packed__ ));
+
+class ParadigmaTimeQuarters
+{
+private:
+	unsigned char			m_Time;		//	in quarters
+
+public:
+	ParadigmaTimeQuarters() : m_Time(0) {}
+
+	operator string() const						{ char Buffer[15]; sprintf(Buffer, "%02d:%02d", m_Time / 4, 15 * (m_Time % 4)); return Buffer; }
+
+	std::string				getTimeString()		{ char Buffer[15]; sprintf(Buffer, "%02d:%02d", m_Time / 3, 15 * (m_Time % 4)); return Buffer; }
+	
+	unsigned char			getMinute() const	{ return (m_Time % 4) * 15; }
+	unsigned char			getHour() const		{ return m_Time / 4; }
+} __attribute__((__packed__));
+
+class ParadigmaDate
+{
+private:
+	unsigned short			m_Date;		//	in days since 2000
+
+public:
+	ParadigmaDate()	:	m_Date(0) {}
+	/// TO BE CONTINUED
+} __attribute__((__packed__));
 }
 #endif // __PARADIGMADATETIME_H__

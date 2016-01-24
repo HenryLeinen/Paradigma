@@ -39,25 +39,36 @@ typedef enum {
     Invalid = 0xFF
 } __attribute__((__packed__)) ParadigmaDatasetType_t;
 
+/** ParadigmaBetriebsmode_t specifies which mode is currently used for the heating circuit. Currently 
+  * known values are : Off, Party, Prog1Auto, Prog2Auto, Prog3Auto, etc..
+  */
+typedef enum {
+	Off = 0,
+	Prog1Auto = 8,
+	Prog2Auto = 9,
+	Prog3Auto = 10
+} __attribute__((__packed__)) ParadigmaBetriebsmode_t;
+
+
 typedef char ParadigmaParameterAddress_t[3];
 
 const ParadigmaParameterAddress_t ParadigmaAdresses[] = {
-    {0x00, 0x02, 0x2A},      //  Heizkreis 1
-    {0x01, 0x88, 0x2A},      //  Heizkreis 2
-    {0x03, 0x0E, 0x09},      //  Warmwasser
-    {0x03, 0xF7, 0x0F},      //  Anlagendaten Kessel/Puffer und Zirkulation
-    {0x03, 0xE6, 0x12},      //  Wartung Telefonnummer
-    {0x03, 0x17, 0x70},      //  Warmwasserprogramm 1
-    {0x03, 0x87, 0x70},      //  Warmwasserprogramm 2
-    {0x04, 0x06, 0x70},      //  Zirkulationszeitprogramm 1
-    {0x04, 0x76, 0x70},      //  Zirkulationszeitprogramm 2
-    {0x00, 0x2C, 0x70},      //  Heizzeitprogramm 1 HK1
-    {0x00, 0x9C, 0x70},      //    Heizzeitprogramm 2 HK1
-    {0x01, 0x0C, 0x70},     // Heizzeitprogramm 3 HK1
-    {0x01, 0xB2, 0x70},     // Heizzeitprogramm 1 HK2
-    {0x02, 0x22, 0x70},     //  Heizzeitprogramm 2 HK2
-    {0x02, 0x92, 0x70},     //  Heizzeitprogramm 3 HK2
-    {0x05, 0x08, 0x03}      //  Anlagendaten Kessel/Puffer 2
+    { 0x00, 0x02, 0x2A},      //  Heizkreis 1
+	{ 0x00, 0x2C, 0x70 },     //  Heizzeitprogramm 1 HK1
+	{ 0x00, 0x9C, 0x70 },     //  Heizzeitprogramm 2 HK1
+	{ 0x01, 0x0C, 0x70 },     //  Heizzeitprogramm 3 HK1
+	{ 0x01, 0x88, 0x2A },     //  Heizkreis 2
+	{ 0x01, 0xB2, 0x70 },     //  Heizzeitprogramm 1 HK2
+	{ 0x02, 0x22, 0x70 },     //  Heizzeitprogramm 2 HK2
+	{ 0x02, 0x92, 0x70 },     //  Heizzeitprogramm 3 HK2
+	{ 0x03, 0x0E, 0x09 },     //  Warmwasser
+	{ 0x03, 0x17, 0x70 },     //  Warmwasserprogramm 1
+	{ 0x03, 0x87, 0x70 },     //  Warmwasserprogramm 2
+	{ 0x03, 0xF7, 0x0F },     //  Anlagendaten Kessel/Puffer und Zirkulation
+    { 0x04, 0x06, 0x70 },     //  Zirkulationszeitprogramm 1
+    { 0x04, 0x76, 0x70 },     //  Zirkulationszeitprogramm 2
+	{ 0x04, 0xE6, 0x12 },     //  Wartung Telefonnummer
+	{ 0x05, 0x08, 0x03 }      //  Anlagendaten Kessel/Puffer 2
 };
 
 /** ParadigmaBlockHeader_t represents the header of any sent block by paradigma. */
@@ -126,6 +137,13 @@ typedef struct {
     byte                        Checksumme;
 } __attribute__((__packed__)) MonDta2_t;
 
+typedef struct {
+	ParadigmaBetriebsmode_t		Betriebsmode;
+	ParadigmaWord				unknown1;
+	ParadigmaTemperature		T_Heizen;
+	ParadigmaTemperature		T_Komfort;
+	ParadigmaTemperature		T_Absenken;
+} __attribute__((__packed__)) Paradigma_Heizkreis_t;
 
 /** Class ParadigmaMonitorData encapsulates the data representation and parsing of the
   * data blocks that are being sent by the paradigma heater. The class also provides
